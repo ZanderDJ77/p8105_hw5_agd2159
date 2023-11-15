@@ -7,6 +7,7 @@ date: "11-15-2023"
 
 ```{r Global Settings, message = FALSE}
 library(tidyverse)
+library(rvest)
 set.seed(1234)
 
 theme_set(theme(legend.position = "bottom"))
@@ -84,6 +85,28 @@ test_results |>
 The percentage of unsolved homicides ranges across cities from about 25% on the low end to over 60%-70% on the highest end. **Chicago, IL, New Orleans, LA, and Baltimore, MD** are the top three cities for the highest proportion of unresolved homicides. 
 
 
-# Problem 2: Compiling Randomized Control Trial Dataframe using MAP Function
+# Problem 2: Compiling Randomized Control Trial Dataframe using Iterative Functions (MAP)
+
+The Randomized Control Trial Data is coming in 20 separated CSV files, 10 for the control group and 10 for the experimental. Each contains two rows of data, the 8 weeks of data and the observational values recorded weekly in the longtitudinal study.
+
+Based on the setup of these datasets, as we import it will be important to `pivot_longer` so that week number and value are made two standardized columns rather than disaggregated rows across study participants. 
+
+```{r First Draft of Import}
+#Instructions Start with a dataframe containing all file names; the list.files function will help
+
+study_participants = list.files(path = "./data", full.names = TRUE)
+
+longtitudinal_results = study_participants |> 
+  map_dfr(read_csv, .id = "study_id")
+
+longtitudinal_results |> 
+  knitr::kable(digits=2)
+
+
+
+```
+
 
 # Problem 3: Simulation of One-Sided T-Test
+
+Problem Rules: 
