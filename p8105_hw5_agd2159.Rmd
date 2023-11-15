@@ -8,6 +8,7 @@ date: "11-15-2023"
 ```{r Global Settings, message = FALSE}
 library(tidyverse)
 library(rvest)
+library(patchwork)
 set.seed(1234)
 
 theme_set(theme(legend.position = "bottom"))
@@ -104,11 +105,44 @@ longtitudinal_results = study_participants |>
   separate(study_arm, into = c("study_arm", "subject_id")) |> 
   select(participant_id, study_arm, subject_id, everything())
 
+longtitudinal_results |> 
+  knitr::kable(digits = 2)
+
 #Cleaning using pivot longer
+longtitudinal_results = longtitudinal_results |> 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "study_week",
+    values_to = "observations",
+    names_prefix = "week_"
+  ) |> 
+  mutate(study_week = as.numeric(study_week))
 
 longtitudinal_results |> 
-  knitr::kable(digits=2)
+  head()
 
+```
+
+Now that weeks and observations are aggregated into two centralized columns, there is greater ability to do grouped_by summary calculations. 
+
+We are asked to next visualize these observations in spaghetti plots, separating by control or experimental arm, (faceting): 
+
+```{r}
+#Instructions: Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups
+
+ggp_results = longtitudinal_results |>
+  group_by(subject_id) |> 
+  ggplot(aes(x = study_week, y = observations)) + 
+           geom_point(alpha = 0.7 , aes(color = subject_id)) +  geom_line(alpha = 0.7, aes(color = subject_id)) +
+          geom_smooth() +
+  labs(
+    title = "Randomized Control Trial Results Over 8 Weeks, Control vs. Experimental Arms",
+    x = "Week of Study",
+    y = "Observational Value"
+  ) +
+  facet_grid(. ~ study_arm)
+
+ggp_results
 ```
 
 
