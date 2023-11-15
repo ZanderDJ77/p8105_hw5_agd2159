@@ -91,18 +91,23 @@ The Randomized Control Trial Data is coming in 20 separated CSV files, 10 for th
 
 Based on the setup of these datasets, as we import it will be important to `pivot_longer` so that week number and value are made two standardized columns rather than disaggregated rows across study participants. 
 
-```{r First Draft of Import}
+```{r Bulk Import using map function}
 #Instructions Start with a dataframe containing all file names; the list.files function will help
 
 study_participants = list.files(path = "./data", full.names = TRUE)
 
+#Initial Import and Column Creation
 longtitudinal_results = study_participants |> 
-  map_dfr(read_csv, .id = "study_id")
+  map_dfr(read_csv, .id = "participant_id") |> 
+  mutate(study_arm = print(dir(path = "./data", include.dirs = FALSE))) |> 
+  mutate(study_arm = str_remove(study_arm, ".csv")) |> 
+  separate(study_arm, into = c("study_arm", "subject_id")) |> 
+  select(participant_id, study_arm, subject_id, everything())
+
+#Cleaning using pivot longer
 
 longtitudinal_results |> 
   knitr::kable(digits=2)
-
-
 
 ```
 
