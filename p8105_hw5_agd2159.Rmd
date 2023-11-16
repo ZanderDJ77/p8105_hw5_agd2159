@@ -169,19 +169,65 @@ sim_t_test = function(x) {
 }
 ```
 
-I will attempt to create an iterated dataframe given the model design specifications using the `expand_grid` function and `map`. Using template from class simulations.rmd worksheet.
+I will attempt to create an iterated data frame given the model design specifications using the `expand_grid` function and `map`. Using template from class `simulations.rmd` worksheet.
 
 ```{r}
+#sample size n of 30
+#true means across 0 to 6
+#originally had sample_size and true_mu variables but changed back to n and mu for consistency with sim_rnorm_data function. Did not want to confuse variables.
 
 sim_results_df = 
   expand_grid(
-    sample_size =30,
-    true_mu = 0:6,
-    iter = 1:100
+    n = 30,
+    mu = 0:6,
+    iter = 1:5000
   ) |> 
   mutate(
-    data_df = map2(sample_size, true_mu, sim_rnorm_data)) |> 
+    data_df = map2(n, mu, sim_rnorm_data)) |> 
   mutate(t_test_results = map(data_df, sim_t_test)) |> 
   unnest(t_test_results)
   
+sim_results_df
 ```
+
+After allowing for 5,000 iterations across 7 different assigned true means (mu = 0 through 6), the simulation dataframe `sim_results_df` holds **`r nrow(sim_results_df)`** observations across **`r ncol(sim_results_df)`** column variables. The mean mu, p value, and estimate values are of primary interest for the upcoming visualizations. 
+
+###Visualization 1: 
+*Instructions: Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of mu on the x axis. Describe the association between effect size and power.* 
+
+```{r}
+power_plot = sim_results_df |> 
+  group_by(mu) |> 
+  mutate(test_status = case_when(
+    p.value >= 0.05 ~ "Null Accepted",
+    p.value < 0.05 ~ "Null Rejected"
+  )) |> 
+  count(test_status)
+
+power_plot |> 
+  knitr::kable(digits = 2)
+```
+
+This cleaned data table retrieves the count n of p-values below 0.05 which reject the null and p-values above 0.05 which accept the null hypothesis. Proportions can then be calculated from the following count values.
+
+```{r}
+power_plot = power_plot |> 
+  filter(test_status == "Null Rejected") |> 
+  mutate(power = n / 5000)
+
+power_plot |> 
+  group_by(mu) |> 
+  ggplot(aes(x = mu, y = power, fill = mu)) +
+  geom_col() + 
+  labs(
+    title = "Identifying Hypothesis Testing Power of One-Sample T-Test, 5000 Iterations",
+    x = "Assigned True Mean Mu",
+    y = "Statistical Testing Power (percentage of p-value <0.05)"
+  ) + 
+  scale_x_continuous(breaks = scales::pretty_breaks(6))
+
+```
+
+This visualization identifies the percentage of p-values within the simulated 5000 t-tests that were statistically significant and rejected the null hypothesis, for the 7 different assigned true means 0 through 6. Considering in the function `sim_t_test` we were asked to test from a base mean of 0 and alpha of 0.05, the true assigned mean of 0 in the simulation dataframe had the closest results, with statistical power of **0.052** after 5,000 iterations. As the true assigned mean moved higher away from the base mean of 0, the larger amount of p-values rejected the null hypothesis of presumed randomness, and staitiscal power grows. By true assigned mean of 4 - 6, the statistical power is virtually 98 - 100%, due to having the greatest deviations from the mean across the modeled dataframes.
+
+
