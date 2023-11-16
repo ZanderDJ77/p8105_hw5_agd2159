@@ -133,7 +133,7 @@ We are asked to next visualize these observations in spaghetti plots, separating
 ggp_results = longtitudinal_results |>
   group_by(subject_id) |> 
   ggplot(aes(x = study_week, y = observations)) + 
-           geom_point(alpha = 0.7 , aes(color = subject_id)) +  geom_line(alpha = 0.7, aes(color = subject_id)) +
+           geom_point(alpha = 0.7, aes(color = subject_id)) +  geom_line(alpha = 0.7, aes(color = subject_id)) +
           geom_smooth() +
   labs(
     title = "Randomized Control Trial Results Over 8 Weeks, Control vs. Experimental Arms",
@@ -169,7 +169,7 @@ sim_t_test = function(x) {
 }
 ```
 
-I will attempt to create an iterated data frame given the model design specifications using the `expand_grid` function and `map`. Using template from class `simulations.rmd` worksheet.
+I will attempt to create an iterated data frame given the model design specifications using the `expand_grid` function and `map`. Starting from the template from class `simulations.rmd` worksheet. Problem 1 solutions illustrate an example using `map2.`
 
 ```{r}
 #sample size n of 30
@@ -229,5 +229,25 @@ power_plot |>
 ```
 
 This visualization identifies the percentage of p-values within the simulated 5000 t-tests that were statistically significant and rejected the null hypothesis, for the 7 different assigned true means 0 through 6. Considering in the function `sim_t_test` we were asked to test from a base mean of 0 and alpha of 0.05, the true assigned mean of 0 in the simulation dataframe had the closest results, with statistical power of **0.052** after 5,000 iterations. As the true assigned mean moved higher away from the base mean of 0, the larger amount of p-values rejected the null hypothesis of presumed randomness, and staitiscal power grows. By true assigned mean of 4 - 6, the statistical power is virtually 98 - 100%, due to having the greatest deviations from the mean across the modeled dataframes.
+
+### Visualization 2: Plots for Average Estimate in T-Test
+
+*Instructions: 1) Make a plot showing the average estimate of muhat on the y axis and the true value of mu on the x axis. 2) Make a second plot (or overlay on the first) the average estimate of muhat only in samples for which the null was rejected on the y axis and the true value of mu on the x axis. Is the sample average of muhat across tests for which the null is rejected approximately equal to the true value of mu? Why or why not?*
+
+```{r Estimate Avg vs. True Mean }
+average_estimate_df = sim_results_df |> 
+  group_by(mu) |> 
+  mutate(avg_estimate_mu = mean(estimate))
+
+average_estimate_df |> 
+  ggplot(aes(x = mu, y = avg_estimate_mu, color = mu)) + geom_point() + geom_line() +
+    labs(
+    title = "Comparing Estimate Means with Assigned True Means in Sim. T-Test, 5000 Iterations",
+    x = "Assigned True Mean Mu",
+    y = "Averaged Estimate Mu from 5000 t-tests"
+  ) + scale_x_continuous(breaks = scales::pretty_breaks(6))
+```
+
+This visualization shows that the overall average estimated mean from 5000 simulation t-tests is highly accurate to the true mean that it was assigned. For example, the avg. estimate mu was 0.02864 in this sample with assigned mean of 0. Similarly, the assigned sample of true mean 4 had a avg. estimate mean of 3.981539. The line is nearly straight like a y = x relationship. 
 
 
